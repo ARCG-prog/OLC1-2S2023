@@ -1,0 +1,124 @@
+
+/* 1. Package e importaciones */
+package Analizadores; 
+import java_cup.runtime.*;
+import java.util.ArrayList;
+import java.util.List;
+import Errores.Excepcion;
+
+/* 2. Codigo para el parser, variables, metodos */
+parser code 
+{:
+    //Clases, objetos, variables, lista, etc... en sintaxis java
+    
+    //Creo una lista de tipo String llamada 'salidas', donde guardare cada uno de las salidas analizadas
+    //Para el proyecto se sugiere HashMap
+    public List<String> salidas = new ArrayList<String>();
+
+    //Lista de errores
+    public ArrayList<Excepcion> Errores = new ArrayList();
+    
+    /**
+     * Método al que se llama automáticamente ante algún error sintactico.
+    **/ 
+    public void syntax_error(Symbol s){ 
+        Errores.add(new Excepcion("Sintáctico", "Error de sintaxis detectado. Se detectó: " + s.value, s.left + "", s.right + ""));
+    } 
+    
+    /**
+     * Método al que se llama automáticamente ante algún error sintáctico 
+     * en el que ya no es posible una recuperación de errores.
+    **/ 
+    public void unrecovered_syntax_error(Symbol s) throws java.lang.Exception{ 
+        System.out.println("Error síntactico irrecuperable en la Línea " + (s.left)+ " Columna "+s.right+". Componente " + s.value + " no reconocido."); 
+    }
+
+    public ArrayList<Excepcion> getErrores(){
+        return Errores;
+    }
+    
+
+:} 
+
+/* 3. Terminales */
+terminal String PTCOMA,PARIZQ,PARDER,LLAVDER,LLAVIZQ,IGUAL,PUNTO;
+terminal String MAS,MENOS,POR,DIVIDIDO;
+terminal String ENTERO;
+terminal String DECIMAL;
+terminal String BOOLEANO;
+terminal String ID;
+terminal String UMENOS;
+terminal String PR_VOID;
+terminal String PR_MAIN;
+terminal String PR_INT;
+terminal String PR_DOUBLE; 
+terminal String PR_BOOL;
+terminal String PR_CONSOLE;
+terminal String PR_WRITE;
+
+/* 4. No Terminales */
+non terminal ini;
+non terminal sentencias;
+non terminal sentencia;
+non terminal sentencia_print;
+non terminal sentencia_declaracion;
+non terminal expresion;
+non terminal tipo_dato;
+/*non terminal f;*/
+
+/* 5. Precedencias */
+precedence left MAS,MENOS;
+precedence left POR,DIVIDIDO;
+precedence right UMENOS; 
+
+/* 6. Producciones */
+
+start with ini; 
+ini::= PR_VOID PR_MAIN PARIZQ PARDER LLAVIZQ sentencias LLAVDER
+;
+
+sentencias ::= sentencias sentencia 
+              | sentencias error
+              | sentencia
+; 
+
+sentencia ::= sentencia_print
+            | sentencia_declaracion
+            | error PTCOMA {:
+            //Aqui activa el Panic Mode al encontrar un punto y coma y reporta el error sintactico
+            :}
+;
+      
+sentencia_print ::= PR_CONSOLE PUNTO PR_WRITE PARIZQ expresion:a PARDER PTCOMA
+    {:
+    
+       System.out.println("Debo retornar esto: print(" + a +")" );
+       //Inserto en la lista de salidas de la expresión evaluada
+       salidas.add("print(" + a + ")");
+    :}
+;
+
+sentencia_declaracion ::= tipo_dato ID IGUAL expresion PTCOMA
+;
+
+tipo_dato ::= PR_INT
+            |PR_DOUBLE
+            |PR_BOOL
+;
+
+expresion ::= expresion:a MAS expresion:b {: RESULT = a + " + " + b; :}
+            | expresion:a POR expresion:b {: RESULT = a + " * " + b; :}
+            | PARIZQ expresion:a PARDER {:RESULT=a;:} 
+            | ENTERO:a {:RESULT=a;:}
+            | DECIMAL:a {:RESULT=a;:}
+            | ID:a {:RESULT=a;:}
+            | BOOLEANO:a {:RESULT=a;:}
+;
+
+/*
+| f:a {:RESULT=a;:}
+f ::= ENTERO:a {:RESULT=a;:}
+     |DECIMAL:a {:RESULT=a;:}
+     
+     |BOOLEANO:a {:RESULT=a;:}
+;*/
