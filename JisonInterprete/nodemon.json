@@ -1,0 +1,11 @@
+ 
+{
+    "watch":[
+        "src",
+        "entrada.txt",
+        "index.ts",
+        "Grammar.jison"
+    ],
+    "ext" : "ts, txt",
+    "exec" : "ts-node ./src/"
+}
