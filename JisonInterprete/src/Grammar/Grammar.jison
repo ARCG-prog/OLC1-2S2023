@@ -17,6 +17,14 @@
     const {Statement} = require('../Instruction/Statement');
     const {CreateTable} = require('../Instruction/CreateTable');
 
+    const {TypeIns} = require('../Instruction/Function');
+    const {Function} = require('../Instruction/Function');
+    const {Call} = require('../Instruction/Call');
+    const {Params} = require('../Instruction/Params');
+
+    const {ToLowerUpper} = require('../Instruction/ToLowerUpper');
+    const {Round} = require('../Instruction/Round');
+
 %}
 
 
@@ -81,8 +89,14 @@ id ([a-zA-Z_])[a-zA-Z0-9_ñÑ]*
 "print"                 return 'PRINT'
 "begin"                 return 'BEGIN'
 "end"                   return 'END'
-"create"                return 'CREATE';
-"table"                 return 'TABLE';
+"create"                return 'CREATE'
+"table"                 return 'TABLE'
+"function"              return 'FUNCTION'
+"returns"               return 'RETURNS'
+"select"                return 'SELECT'
+"lower"                 return 'LOWER'
+"upper"                 return 'UPPER'
+"round"                 return 'ROUND'
 
 {id}	                return 'ID';
 
@@ -130,20 +144,22 @@ Instructions
 ;
 
 Instruction
-    :Declaration   { 
-        $$ = $1
-    }
-    | Statement  ';'   { $$ = $1 } //Sentencia
-    | Assignment  ';' { $$ = $1 }
-    | Print ';' { $$ = $1 }
-    | DDL ';'   { $$ = $1; }
-    | error  {  
+    : FunctionIns ';'       { $$ = $1 }   
+    | Declaration           { $$ = $1 }
+    | Statement  ';'        { $$ = $1 } 
+    | Assignment  ';'       { $$ = $1 }
+    | Print ';'             { $$ = $1 }
+    | Call  ';'             { $$=  $1 }
+    | DDL ';'               { $$ = $1 }
+    | ToLowerUpperExp ';'   { $$ = $1 }
+    | RoundIns ';'          { $$ = $1 }
+    | error  {   
         console.log({ line: this._$.first_line, column: this._$.first_column, type: 'Sintáctico', message: `Error sintáctico, token no esperado '${yytext}' .`})
     }
 ;
 
 
-DECLARE @mivariable varchar default = 5*5/5-687-2;
+//DECLARE @mivariable varchar default = 5*5/5-687-2;
 Declaration
     : 'DECLARE' '@' ID DataType 'DEFAULT' Expr ';' 
     { 
@@ -214,6 +230,58 @@ F :  '(' Expr ')'
         $$ = new Access($1, null, @1.first_line, @1.first_column); }
 ;
 
+Call
+    : SELECT ID '(' ')'
+    {
+        $$ = new Call($2, [], @1.first_line, @1.first_column);
+    }
+    | SELECT ID '(' ListaExpr ')'
+    {
+        $$ = new Call($2, $4, @1.first_line, @1.first_column);
+    }
+;
+
+ListaExpr 
+    : ListaExpr ',' Expr {
+        $1.push($3);
+        $$ = $1;
+    }
+    | Expr {
+        $$ = [$1];
+    }
+;    
+
+
+FunctionIns
+    : CREATE FUNCTION ID '(' ')' RETURNS DataType Statement
+    {
+        $$ = new Function($7, TypeIns.FUNCTION, $3, $8, [], @1.first_line, @1.first_column);
+    }
+    | CREATE FUNCTION ID '(' Params ')' RETURNS DataType Statement
+    {
+        $$ = new Function($8, TypeIns.FUNCTION, $3, $9, $5, @1.first_line, @1.first_column);
+    }
+;
+
+Params
+    : Params ',' Param {
+        $1.push($3);
+        $$ = $1;
+    }
+    | Param
+    {
+        $$ = [$1];
+    }
+;
+
+Param
+    : '@' ID DataType
+    {
+        $$ = new Params($3, $2, @1.first_line, @1.first_column)
+    }
+;
+
+
 //DDL
 
 DDL 
@@ -242,5 +310,23 @@ Attribute
   : ID DataType 
     { 
         $$ = new Field($1, $2, @1.first_line, @1.first_column); 
+    }
+;
+
+ToLowerUpperExp
+    : SELECT LOWER '(' Expr ')'
+    {
+        $$ = new ToLowerUpper($4,1,@1.first_line, @1.first_column);   
+    }
+    | SELECT UPPER '(' Expr ')'
+    {
+        $$ = new ToLowerUpper($4,2,@1.first_line, @1.first_column);
+    }
+; 
+
+RoundIns
+    : SELECT ROUND '(' Expr ')'
+    {
+        $$ = new Round($4, @1.first_line, @1.first_column);
     }
 ;

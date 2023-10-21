@@ -11,6 +11,8 @@ const parser = require('./Grammar/Grammar');
 import { Request, Response } from 'express';
 import { Environment } from './Symbol/Environment';
 import { Singleton } from './Singleton/Singleton';
+import { cleanErrors, errores } from './Errores';
+import { Function } from './Instruction/Function';
 
 const server = http.createServer(app)
 const port = 3000;
@@ -38,18 +40,16 @@ app.get('/analizar', (req: Request, res: Response) => {
         const ast = parser.parse(entrada.toString());
         const env = new Environment(null);
 
-
         //Se hace una primer pasada para gardar las funciones y metodos
-        // for (const instr of ast) {
-        //     try {
-        //         if (instr instanceof Function) {
-        //             instr.execute(env);
-        //         }
-        //     } catch (error) {
-        //         console.log('OCURRIO UN ERROR EN RECONOCER FUNCION: ', error);
-        //     }
-        // }
-
+        for (const instr of ast) {
+            try {
+                if (instr instanceof Function) {
+                    instr.execute(env);
+                }
+            } catch (error) {
+                console.log('OCURRIO UN ERROR EN RECONOCER FUNCION: ', error);
+            }
+        }
         
         //Segunda pasada para instrucciones, expresiones etc, sin incluir funciones
         for (const instr of ast) {
@@ -66,6 +66,9 @@ app.get('/analizar', (req: Request, res: Response) => {
         console.log('__________________INICIO CONSOLA____________________________');
         console.log(singleton.getConsole());
         console.log('____________________FIN CONSOLA______________________________');
+
+        console.log('Errores: ', errores);
+        console.log('Errores: ', singleton.get_errores());
 
     } catch (error) {
         console.log(error);

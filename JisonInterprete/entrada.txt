@@ -1,28 +1,25 @@
---Instruccion DDL
-CREATE TABLE Clientes ( ID_Cliente INT, Nombre VARCHAR, CorreoElectronico VARCHAR );
 
---Este es un error lexico
-!
+SELECT sumarNumeros(4,5);
+SELECT sumarNumeros(100,99);
 
---Bloque de codigo
+
+CREATE FUNCTION sumarNumeros ( @ numero1 INT, @ numero2 INT )
+RETURNS int
 BEGIN
-    DECLARE @cadena VARCHAR DEFAULT "OLC1";
-    PRINT cadena;
-
-    SET @cadena = "Hola mundo";
-    prINT cadena;
-
-    DECLARE @numero INT DEFAULT 5;
-
-    --string cadena2 = "Mi numero es: " + numero;
-    DECLARE @cadena2 VARCHAR DEFAULT "Mi numero es: " + numero;
-
-    print cadena2;
-
-	 --Bloque de codigo interno
-		BEGIN
-		    DECLARE @cadena VARCHAR DEFAULT "Bloque ";
-		    print cadena;
-		END;
+   DECLARE @resultado INT DEFAULT 0;
+   SET @resultado = numero1 + numero2;
+   PRINT "El resultado de la suma es: " + resultado;
 
 END;
+
+DECLARE @cadenaMayuscula VARCHAR DEFAULT "ESTE ES UN TEXTO EN MAYUSCULAS";
+SELECT LOWER("SALE COMPILADORES 1");
+SELECT LOWER(cadenaMayuscula);
+
+
+DECLARE @cadenaMinuscula VARCHAR DEFAULT "este es un texto en minuscula";
+SELECT UPPER("proyecto 2");
+SELECT UPPER(cadenaMinuscula);
+
+SELECT ROUND(45.8);
+SELECT ROUND(5*2/6*82-2*0.5);

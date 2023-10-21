@@ -2,6 +2,7 @@
 import { Singleton } from "../Singleton/Singleton";
 import { Type } from "./Type";
 import { Symbol } from "./Symbol";
+import { Function } from "../Instruction/Function";
 
 
 export class Environment {
@@ -36,9 +37,11 @@ export class Environment {
      */
 
     private variables: Map<string, Symbol>; //La clase simbolo tiene un id, valor y un tipo
+    private funciones: Map<string, Function>; //La clase simbolo tiene un id, valor y un tipo
 
     constructor(public anterior: Environment | null) {
         this.variables = new Map();
+        this.funciones = new Map();
     }
 
     public saveVar(nombre: string, valor: any, type: Type): boolean {
@@ -85,4 +88,42 @@ export class Environment {
         }
         return null;
     }
+
+    public guardarFuncion(id: string, funcion: Function) {
+        //TODO ver si la funcion ya existe, reportar error
+        this.funciones.set(id, funcion);
+    }
+
+    public getGlobal(): Environment {
+        let env: Environment | null = this;
+        while (env?.anterior != null) {
+            env = env.anterior;
+        }
+        return env;
+    }
+    
+    public guardar(id: string, valor: any, type: Type) {
+        let env: Environment | null = this;
+        while (env != null) {
+            if (env.variables.has(id)) {
+                env.variables.set(id, new Symbol(valor, id, type));
+                return;
+            }
+            env = env.anterior;
+        }
+        this.variables.set(id, new Symbol(valor, id, type));
+    }
+    
+    public getFuncion(id: string): Function | undefined {
+
+        let env: Environment | null = this;
+        while (env != null) {
+            if (env.funciones.has(id)) {
+                return env.funciones.get(id);
+            }
+            env = env.anterior;
+        }
+        return undefined;
+    }
+
 }
